@@ -2,9 +2,10 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME = "devops-ci-cd-app"
+        IMAGE_NAME = "devops-ci-cd-app"
         CONTAINER_NAME = "devops-app"
-        PORT = "3000"
+        HOST_PORT = "3001"
+        CONTAINER_PORT = "3000"
     }
 
     stages {
@@ -18,17 +19,17 @@ pipeline {
         stage('Install Dependencies') {
             steps {
                 sh '''
-                echo "Installing Node Dependencies"
+                echo "Installing Node.js dependencies"
                 npm install
                 '''
             }
         }
 
-        stage('Trivy File System Scan') {
+        stage('Trivy File Scan') {
             steps {
                 sh '''
-                echo "Running Trivy Security Scan"
-                trivy fs . --severity HIGH,CRITICAL
+                echo "Running Trivy filesystem scan"
+                trivy fs .
                 '''
             }
         }
@@ -36,17 +37,17 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh '''
-                echo "Building Docker Image"
-                docker build -t $APP_NAME .
+                echo "Building Docker image"
+                docker build -t $IMAGE_NAME .
                 '''
             }
         }
 
-        stage('Trivy Docker Image Scan') {
+        stage('Trivy Image Scan') {
             steps {
                 sh '''
-                echo "Scanning Docker Image"
-                trivy image $APP_NAME
+                echo "Scanning Docker image"
+                trivy image $IMAGE_NAME
                 '''
             }
         }
@@ -54,11 +55,11 @@ pipeline {
         stage('Deploy Container') {
             steps {
                 sh '''
-                echo "Stopping Old Container"
+                echo "Removing old container if exists"
                 docker rm -f $CONTAINER_NAME || true
 
-                echo "Running New Container"
-                docker run -d -p $PORT:3000 --name $CONTAINER_NAME $APP_NAME
+                echo "Starting container on port 3001"
+                docker run -d -p $HOST_PORT:$CONTAINER_PORT --name $CONTAINER_NAME $IMAGE_NAME
                 '''
             }
         }
@@ -66,7 +67,7 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 sh '''
-                echo "Checking running containers"
+                echo "Running containers:"
                 docker ps
                 '''
             }
@@ -75,11 +76,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ CI/CD Pipeline Executed Successfully!'
+            echo "✅ Pipeline executed successfully!"
         }
-
         failure {
-            echo '❌ Pipeline Failed!'
+            echo "❌ Pipeline failed!"
         }
     }
 }
