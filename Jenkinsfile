@@ -2,12 +2,14 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "devops-ci-cd-app"
+        APP_NAME = "devops-ci-cd-app"
+        CONTAINER_NAME = "devops-app"
+        PORT = "3000"
     }
 
     stages {
 
-        stage('Checkout') {
+        stage('Checkout Code') {
             steps {
                 git branch: 'main', url: 'https://github.com/jattin278-code/devops-ci-cd-app.git'
             }
@@ -15,31 +17,69 @@ pipeline {
 
         stage('Install Dependencies') {
             steps {
-                sh 'npm install'
+                sh '''
+                echo "Installing Node Dependencies"
+                npm install
+                '''
             }
         }
 
-        stage('Trivy Scan') {
+        stage('Trivy File System Scan') {
             steps {
-                sh 'trivy fs .'
+                sh '''
+                echo "Running Trivy Security Scan"
+                trivy fs . --severity HIGH,CRITICAL
+                '''
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                sh '''
+                echo "Building Docker Image"
+                docker build -t $APP_NAME .
+                '''
+            }
+        }
+
+        stage('Trivy Docker Image Scan') {
+            steps {
+                sh '''
+                echo "Scanning Docker Image"
+                trivy image $APP_NAME
+                '''
             }
         }
 
         stage('Deploy Container') {
-    steps {
-        sh '''
-        docker stop devops-app || true
-        docker rm devops-app || true
-        docker run -d -p 3000:3000 --name devops-app devops-ci-cd-app
-        '''
-    }
-}
+            steps {
+                sh '''
+                echo "Stopping Old Container"
+                docker rm -f $CONTAINER_NAME || true
 
+                echo "Running New Container"
+                docker run -d -p $PORT:3000 --name $CONTAINER_NAME $APP_NAME
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                sh '''
+                echo "Checking running containers"
+                docker ps
+                '''
+            }
+        }
+    }
+
+    post {
+        success {
+            echo '✅ CI/CD Pipeline Executed Successfully!'
+        }
+
+        failure {
+            echo '❌ Pipeline Failed!'
+        }
     }
 }
