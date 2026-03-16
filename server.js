@@ -1,145 +1,131 @@
 const http = require("http");
-const https = require("https");
-
-const PORT = 3000;
-
-// Free public news API
-const NEWS_API = "https://api.spaceflightnewsapi.net/v4/articles/?limit=5";
 
 const server = http.createServer((req, res) => {
 
-  https.get(NEWS_API, (apiRes) => {
-    let data = "";
+res.writeHead(200, {"Content-Type":"text/html"});
 
-    apiRes.on("data", chunk => {
-      data += chunk;
-    });
-
-    apiRes.on("end", () => {
-      const news = JSON.parse(data).results;
-
-      let newsCards = "";
-
-      news.forEach(article => {
-        newsCards += `
-        <div class="news-card">
-          <img src="${article.image_url}" />
-          <h3>${article.title}</h3>
-          <p>${article.summary.substring(0,120)}...</p>
-          <a href="${article.url}" target="_blank">Read More</a>
-        </div>
-        `;
-      });
-
-      res.writeHead(200, { "Content-Type": "text/html" });
-
-      res.end(`
+res.end(`
 <!DOCTYPE html>
 <html>
 
 <head>
-<title>DevOps News Dashboard</title>
+<title>F1 Fan Dashboard</title>
 
 <style>
 
 body{
-font-family: Arial;
 margin:0;
-background: linear-gradient(120deg,#1f4037,#99f2c8);
+font-family:Arial;
 color:white;
 overflow-x:hidden;
 }
 
-/* Header */
+/* BACKGROUND VIDEO */
+
+#bg-video{
+position:fixed;
+right:0;
+bottom:0;
+min-width:100%;
+min-height:100%;
+object-fit:cover;
+z-index:-2;
+}
+
+/* DARK OVERLAY */
+
+.overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.65);
+z-index:-1;
+}
+
+/* HEADER */
 
 .header{
 text-align:center;
 padding:40px;
-animation:fadeIn 2s ease;
+animation:fade 2s;
 }
 
 .header h1{
-font-size:45px;
+font-size:55px;
+color:#ff1e1e;
 }
 
 .badge{
-display:inline-block;
-margin-top:10px;
-background:#00ffae;
-color:black;
+background:red;
 padding:10px 20px;
 border-radius:6px;
 font-weight:bold;
 }
 
-/* News Grid */
+/* NAV */
+
+.nav{
+text-align:center;
+margin-bottom:30px;
+}
+
+.nav a{
+color:white;
+text-decoration:none;
+margin:20px;
+font-size:18px;
+}
+
+/* GRID */
 
 .container{
 display:grid;
-grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(300px,1fr));
 gap:20px;
 padding:40px;
 }
 
-/* Card */
+/* CARD */
 
-.news-card{
+.card{
 background:rgba(255,255,255,0.1);
-padding:20px;
-border-radius:12px;
+padding:25px;
+border-radius:10px;
 transition:0.3s;
-animation:slideUp 1s ease;
+backdrop-filter:blur(6px);
 }
 
-.news-card:hover{
+.card:hover{
 transform:translateY(-10px);
-box-shadow:0 10px 25px rgba(0,0,0,0.4);
+box-shadow:0 15px 30px rgba(0,0,0,0.5);
 }
 
-.news-card img{
+.card h2{
+color:#ffcc00;
+}
+
+/* PRODUCTS */
+
+.product img{
 width:100%;
 border-radius:10px;
 }
 
-.news-card h3{
-margin-top:10px;
-}
-
-.news-card a{
-display:inline-block;
-margin-top:10px;
-background:#00ffae;
-color:black;
-padding:8px 15px;
-text-decoration:none;
-border-radius:5px;
-}
-
-/* Animations */
-
-@keyframes fadeIn{
-from{opacity:0}
-to{opacity:1}
-}
-
-@keyframes slideUp{
-from{
-opacity:0;
-transform:translateY(30px);
-}
-to{
-opacity:1;
-transform:translateY(0);
-}
-}
-
-/* Footer */
+/* FOOTER */
 
 .footer{
 text-align:center;
 padding:20px;
-font-size:14px;
-opacity:0.8;
+opacity:0.7;
+}
+
+/* ANIMATION */
+
+@keyframes fade{
+from{opacity:0}
+to{opacity:1}
 }
 
 </style>
@@ -147,36 +133,106 @@ opacity:0.8;
 
 <body>
 
+<!-- F1 BACKGROUND VIDEO -->
+
+<video autoplay muted loop id="bg-video">
+<source src="https://cdn.coverr.co/videos/coverr-racing-car-on-track-1579/1080p.mp4" type="video/mp4">
+</video>
+
+<div class="overlay"></div>
+
 <div class="header">
-<h1>🚀 DevOps CI/CD News Dashboard</h1>
-<p>Latest Tech & Space News (Live API)</p>
+
+<h1>🏎️ Formula 1 Fan Dashboard</h1>
 
 <div class="badge">
-Node.js • Jenkins • Docker • Trivy • SonarQube
+F1 History • Champions • Teams • Products
 </div>
+
+</div>
+
+<div class="nav">
+<a href="#">Home</a>
+<a href="#">History</a>
+<a href="#">Champions</a>
+<a href="#">Teams</a>
+<a href="#">Products</a>
 </div>
 
 <div class="container">
-${newsCards}
+
+<div class="card">
+<h2>🏁 History of F1</h2>
+<p>
+Formula 1 started in 1950 and is the highest class of international racing.
+Legendary drivers like 
+<strong>Michael Schumacher</strong>, 
+<strong>Ayrton Senna</strong>, and 
+<strong>Lewis Hamilton</strong> 
+have defined the sport.
+</p>
+</div>
+
+<div class="card">
+<h2>🏆 Current Champion</h2>
+<p>
+The current dominant driver in recent seasons is 
+<strong>Max Verstappen</strong>
+from 
+<strong>Red Bull Racing</strong>.
+</p>
+</div>
+
+<div class="card">
+<h2>📅 Famous Races</h2>
+<ul>
+<li>🇲🇨 Monaco Grand Prix</li>
+<li>🇮🇹 Italian Grand Prix</li>
+<li>🇬🇧 British Grand Prix</li>
+</ul>
+</div>
+
+<div class="card product">
+<h2>🛍️ F1 Merchandise</h2>
+<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/6e/F1_logo.svg/1200px-F1_logo.svg.png">
+<p>
+Official Formula 1 merchandise includes caps, jackets, and team shirts from Ferrari, Mercedes, and Red Bull.
+</p>
+</div>
+
+<div class="card">
+<h2>📊 Teams</h2>
+<ul>
+<li>Ferrari</li>
+<li>Mercedes</li>
+<li>Red Bull Racing</li>
+<li>McLaren</li>
+<li>Aston Martin</li>
+</ul>
+</div>
+
+<div class="card">
+<h2>📡 DevOps Project</h2>
+<p>
+This website is deployed using a CI/CD pipeline powered by:
+</p>
+<p>
+Node.js + Jenkins + Docker + Trivy + SonarQube
+</p>
+</div>
+
 </div>
 
 <div class="footer">
-Auto-updated news feed • Powered by DevOps Pipeline
+Built with DevOps CI/CD Pipeline 🚀
 </div>
 
 </body>
-
 </html>
 `);
-    });
-
-  }).on("error", () => {
-    res.writeHead(500);
-    res.end("Error fetching news");
-  });
 
 });
 
-server.listen(PORT, () => {
-  console.log("Server running on port " + PORT);
+server.listen(3000,()=>{
+console.log("Server running on port 3000");
 });
