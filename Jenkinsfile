@@ -32,13 +32,14 @@ pipeline {
         }
 
         stage('Deploy Container') {
-            steps {
-                sh '''
-                docker rm -f devops-app || true
-                docker run -d -p 3000:3000 --name devops-app $IMAGE_NAME
-                '''
-            }
-        }
+    steps {
+        sh '''
+        docker stop devops-app || true
+        docker rm devops-app || true
+        docker run -d -p 3000:3000 --name devops-app devops-ci-cd-app
+        '''
+    }
+}
 
     }
 }
